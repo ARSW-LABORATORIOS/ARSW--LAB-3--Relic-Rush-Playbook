@@ -2,6 +2,8 @@ package edu.eci.arsw.relicrush.app;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * A circular station marker: the icon lives inside a colored disc, the
@@ -22,6 +24,7 @@ final class StationMarker extends JPanel {
     private Color borderColor = freeBorder;
     private double pulse = 1.0;
     private Timer pulseTimer;
+    private final Map<String, Color> waitingAdventurers = new LinkedHashMap<>();
 
     StationMarker(String stationName) {
         setLayout(null);
@@ -46,6 +49,19 @@ final class StationMarker extends JPanel {
         this.borderColor = freeBorder;
         nameLabel.setText("libre");
         flash();
+    }
+
+    /** Someone is blocked waiting for this station's lock: shown as a small "z" badge. */
+    void addWaiting(String who, Color color) {
+        waitingAdventurers.put(who, color);
+        repaint();
+    }
+
+    /** They got the lock (or gave up waiting on it): clear their "z" badge. */
+    void removeWaiting(String who) {
+        if (waitingAdventurers.remove(who) != null) {
+            repaint();
+        }
     }
 
     /** Brief grow-then-settle pulse, so a state change is obvious even if it's quick. */
@@ -85,6 +101,28 @@ final class StationMarker extends JPanel {
         int iconX = (WIDTH - icon.getIconWidth()) / 2;
         int iconY = (DIAMETER - icon.getIconHeight()) / 2;
         icon.paintIcon(this, g2, iconX, iconY);
+
+        paintWaitingBadge(g2, cx, cy, d);
         g2.dispose();
+    }
+
+    /** Small ascending "z"s in the color of whoever is sleeping/blocked waiting on this station. */
+    private void paintWaitingBadge(Graphics2D g2, int cx, int cy, int d) {
+        if (waitingAdventurers.isEmpty()) {
+            return;
+        }
+        int baseX = cx + d - 4;
+        int baseY = cy + 10;
+        int i = 0;
+        for (Color waitingColor : waitingAdventurers.values()) {
+            if (i >= 3) {
+                break;
+            }
+            float size = 9f + i * 2.5f;
+            g2.setFont(getFont().deriveFont(Font.BOLD, size));
+            g2.setColor(waitingColor);
+            g2.drawString("z", baseX + i * 5, baseY - i * 8);
+            i++;
+        }
     }
 }

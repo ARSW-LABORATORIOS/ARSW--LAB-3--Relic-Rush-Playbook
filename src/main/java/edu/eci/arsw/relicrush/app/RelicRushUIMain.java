@@ -183,11 +183,12 @@ public final class RelicRushUIMain {
                     Color color = adventurerColors.getOrDefault(who, Color.DARK_GRAY);
                     if (marker != null) {
                         switch (type) {
-                            case ACQUIRED -> marker.setOccupied(color, who);
-                            case RELEASED -> marker.setFree();
-                            case WAITING -> {
-                                // The marker keeps its current look; the log line is the evidence of the wait.
+                            case ACQUIRED -> {
+                                marker.removeWaiting(who);
+                                marker.setOccupied(color, who);
                             }
+                            case RELEASED -> marker.setFree();
+                            case WAITING -> marker.addWaiting(who, color);
                         }
                     }
                     appendLog(logPane, who + " " + type.toString().toLowerCase() + " " + stationName, color);
