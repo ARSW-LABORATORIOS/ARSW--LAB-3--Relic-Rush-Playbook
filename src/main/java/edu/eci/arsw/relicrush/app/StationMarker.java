@@ -16,6 +16,7 @@ final class StationMarker extends JPanel {
     private static final int WIDTH = 96;
     private static final int HEIGHT = 76;
 
+    private final String stationName;
     private final StationIcon icon;
     private final JLabel nameLabel;
     private final Color freeColor = new Color(0xF3E6C4);
@@ -25,28 +26,35 @@ final class StationMarker extends JPanel {
     private final Map<String, Color> waitingAdventurers = new LinkedHashMap<>();
 
     StationMarker(String stationName) {
+        this.stationName = stationName;
         setLayout(null);
         setOpaque(false);
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         icon = new StationIcon(stationName);
-        nameLabel = new JLabel(stationName, SwingConstants.CENTER);
+        nameLabel = new JLabel("", SwingConstants.CENTER);
         nameLabel.setFont(nameLabel.getFont().deriveFont(Font.BOLD, 10f));
         nameLabel.setBounds(0, DIAMETER + 4, WIDTH, 28);
         add(nameLabel);
+        setFree();
     }
 
     void setOccupied(Color color, String who) {
         this.fillColor = color;
         this.borderColor = color.darker();
-        nameLabel.setText("<html><center>en uso<br>" + who + "</center></html>");
+        nameLabel.setText(statusHtml(who));
         repaint();
     }
 
     void setFree() {
         this.fillColor = freeColor;
         this.borderColor = freeBorder;
-        nameLabel.setText("libre");
+        nameLabel.setText(statusHtml("libre"));
         repaint();
+    }
+
+    private String statusHtml(String status) {
+        return "<html><center style='font-size:9px'>" + stationName
+                + "<br><b style='font-size:10px'>" + status + "</b></center></html>";
     }
 
     /** Someone is blocked waiting for this station's lock: shown as a small "z" badge. */
