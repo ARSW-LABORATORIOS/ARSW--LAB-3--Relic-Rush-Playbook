@@ -3,10 +3,10 @@ package edu.eci.arsw.relicrush.concurrency;
 import edu.eci.arsw.relicrush.model.ForgeStation;
 
 /**
- * Starter implementation intentionally contains a deadlock risk.
- *
- * Students: do NOT replace this with one global lock. Preserve concurrency
- * between forge operations that use disjoint stations.
+ * Deterministic lock ordering (by station id) prevents the circular wait
+ * that caused the deadlock in the starter. Fine-grained locking is
+ * preserved: forge operations on disjoint stations can still run in
+ * parallel, nothing is serialized behind a single global lock.
  */
 public final class LockPair {
 
@@ -25,25 +25,23 @@ public final class LockPair {
     }
 
     public static void withBoth(ForgeStation first, ForgeStation second, Runnable action) {
-        // TODO LAB 3: This acquisition strategy can create circular wait.
-        // Fix it using a deterministic ordering strategy (or justify another
-        // deadlock-prevention approach) while preserving fine-grained locking.
+        ForgeStation lo = first.id() < second.id() ? first : second;
+        ForgeStation hi = first.id() < second.id() ? second : first;
+
         String who = Thread.currentThread().getName();
-        notify(who, first.name(), StationActivityListener.EventType.WAITING);
-        synchronized (first) {
-            notify(who, first.name(), StationActivityListener.EventType.ACQUIRED);
-            // This small delay makes the deadlock easier to reproduce in the starter.
-            sleepQuietly(2);
-            notify(who, second.name(), StationActivityListener.EventType.WAITING);
-            synchronized (second) {
-                notify(who, second.name(), StationActivityListener.EventType.ACQUIRED);
+        notify(who, lo.name(), StationActivityListener.EventType.WAITING);
+        synchronized (lo) {
+            notify(who, lo.name(), StationActivityListener.EventType.ACQUIRED);
+            notify(who, hi.name(), StationActivityListener.EventType.WAITING);
+            synchronized (hi) {
+                notify(who, hi.name(), StationActivityListener.EventType.ACQUIRED);
                 try {
                     action.run();
                 } finally {
-                    notify(who, second.name(), StationActivityListener.EventType.RELEASED);
+                    notify(who, hi.name(), StationActivityListener.EventType.RELEASED);
                 }
             }
-            notify(who, first.name(), StationActivityListener.EventType.RELEASED);
+            notify(who, lo.name(), StationActivityListener.EventType.RELEASED);
         }
     }
 
@@ -51,14 +49,6 @@ public final class LockPair {
         StationActivityListener current = listener;
         if (current != null) {
             current.onStationEvent(who, stationName, type);
-        }
-    }
-
-    private static void sleepQuietly(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 }
