@@ -133,7 +133,7 @@ public final class RelicRushUIMain {
         frame.add(rosterScroll, BorderLayout.EAST);
         frame.add(logScroll, BorderLayout.SOUTH);
 
-        Map<String, JLabel> stationLabels = new HashMap<>();
+        Map<String, StationMarker> stationMarkers = new HashMap<>();
         GameEngine[] engineHolder = new GameEngine[1];
 
         startButton.addActionListener(e -> {
@@ -149,20 +149,14 @@ public final class RelicRushUIMain {
                 adventurerColors.put("adventurer-" + i, PALETTE[(i - 1) % PALETTE.length]);
             }
 
-            stationLabels.clear();
-            java.util.List<JLabel> orderedLabels = new java.util.ArrayList<>();
+            stationMarkers.clear();
+            java.util.List<StationMarker> orderedMarkers = new java.util.ArrayList<>();
             for (edu.eci.arsw.relicrush.model.ForgeStation station : engine.stations()) {
-                JLabel label = new JLabel(stationHtml(station.name(), "libre"), SwingConstants.CENTER);
-                label.setIcon(new StationIcon(station.name()));
-                label.setVerticalTextPosition(SwingConstants.BOTTOM);
-                label.setHorizontalTextPosition(SwingConstants.CENTER);
-                label.setOpaque(true);
-                label.setBackground(new Color(0xF3E6C4));
-                label.setBorder(BorderFactory.createLineBorder(new Color(0xB99A5F), 2, true));
-                orderedLabels.add(label);
-                stationLabels.put(station.name(), label);
+                StationMarker marker = new StationMarker(station.name());
+                orderedMarkers.add(marker);
+                stationMarkers.put(station.name(), marker);
             }
-            mapBoard.setStationLabels(orderedLabels);
+            mapBoard.setStationMarkers(orderedMarkers);
 
             rosterModel.clear();
             for (int i = 1; i <= adventurersCount; i++) {
@@ -171,22 +165,14 @@ public final class RelicRushUIMain {
             logPane.setText("");
 
             LockPair.setListener((who, stationName, type) -> SwingUtilities.invokeLater(() -> {
-                JLabel label = stationLabels.get(stationName);
+                StationMarker marker = stationMarkers.get(stationName);
                 Color color = adventurerColors.getOrDefault(who, Color.DARK_GRAY);
-                if (label != null) {
+                if (marker != null) {
                     switch (type) {
-                        case ACQUIRED -> {
-                            label.setText(stationHtml(stationName, who));
-                            label.setBackground(color);
-                            label.setForeground(Color.WHITE);
-                        }
-                        case RELEASED -> {
-                            label.setText(stationHtml(stationName, "libre"));
-                            label.setBackground(new Color(0xF3E6C4));
-                            label.setForeground(Color.BLACK);
-                        }
+                        case ACQUIRED -> marker.setOccupied(color, who);
+                        case RELEASED -> marker.setFree();
                         case WAITING -> {
-                            // Station keeps its current color; the log line is the evidence of the wait.
+                            // The marker keeps its current look; the log line is the evidence of the wait.
                         }
                     }
                 }
@@ -240,10 +226,6 @@ public final class RelicRushUIMain {
         });
 
         frame.setVisible(true);
-    }
-
-    private static String stationHtml(String stationName, String status) {
-        return "<html><center>" + stationName + "<br><b>" + status + "</b></center></html>";
     }
 
     private static void appendLog(JTextPane pane, String text, Color color) {

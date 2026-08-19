@@ -14,14 +14,14 @@ import java.util.List;
 final class MapBoardPanel extends JPanel {
     private static final int LOGICAL_W = 600;
     private static final int LOGICAL_H = 400;
-    private static final int LABEL_W = 130;
-    private static final int LABEL_H = 90;
+    private static final int MARKER_W = 96;
+    private static final int MARKER_H = 76;
 
     private static final double[][] POSITIONS = {
             {16.7, 80}, {33.3, 65}, {50, 75}, {63.3, 50}, {76.7, 60}, {86.7, 35}, {95, 20}, {45, 15}
     };
 
-    private List<JLabel> orderedLabels = List.of();
+    private List<StationMarker> orderedMarkers = List.of();
 
     MapBoardPanel() {
         setLayout(null);
@@ -29,11 +29,11 @@ final class MapBoardPanel extends JPanel {
         setOpaque(true);
     }
 
-    void setStationLabels(List<JLabel> labels) {
+    void setStationMarkers(List<StationMarker> markers) {
         removeAll();
-        this.orderedLabels = labels;
-        for (JLabel label : labels) {
-            add(label);
+        this.orderedMarkers = markers;
+        for (StationMarker marker : markers) {
+            add(marker);
         }
         revalidate();
         repaint();
@@ -43,11 +43,11 @@ final class MapBoardPanel extends JPanel {
     public void doLayout() {
         int w = getWidth();
         int h = getHeight();
-        for (int i = 0; i < orderedLabels.size(); i++) {
+        for (int i = 0; i < orderedMarkers.size(); i++) {
             double[] pos = POSITIONS[i % POSITIONS.length];
             int px = (int) (pos[0] / 100.0 * w);
             int py = (int) (pos[1] / 100.0 * h);
-            orderedLabels.get(i).setBounds(px - LABEL_W / 2, py - LABEL_H / 2, LABEL_W, LABEL_H);
+            orderedMarkers.get(i).setBounds(px - MARKER_W / 2, py - MARKER_H / 2, MARKER_W, MARKER_H);
         }
     }
 
