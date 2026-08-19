@@ -7,9 +7,9 @@ import java.util.Map;
 
 /**
  * A circular station marker: the icon lives inside a colored disc, the
- * station name sits below it. When the station changes hands, the disc
- * briefly pulses larger before settling back, so the transition is visible
- * even during fast back-to-back events.
+ * station name sits below it. Color and text change immediately when the
+ * station changes hands - no scale/pulse animation, so several stations
+ * updating at once still reads clean instead of noisy.
  */
 final class StationMarker extends JPanel {
     private static final int DIAMETER = 52;
@@ -22,8 +22,6 @@ final class StationMarker extends JPanel {
     private final Color freeBorder = new Color(0xB99A5F);
     private Color fillColor = freeColor;
     private Color borderColor = freeBorder;
-    private double pulse = 1.0;
-    private Timer pulseTimer;
     private final Map<String, Color> waitingAdventurers = new LinkedHashMap<>();
 
     StationMarker(String stationName) {
@@ -41,14 +39,14 @@ final class StationMarker extends JPanel {
         this.fillColor = color;
         this.borderColor = color.darker();
         nameLabel.setText("<html><center>en uso<br>" + who + "</center></html>");
-        flash();
+        repaint();
     }
 
     void setFree() {
         this.fillColor = freeColor;
         this.borderColor = freeBorder;
         nameLabel.setText("libre");
-        flash();
+        repaint();
     }
 
     /** Someone is blocked waiting for this station's lock: shown as a small "z" badge. */
@@ -64,55 +62,35 @@ final class StationMarker extends JPanel {
         }
     }
 
-    /** Brief grow-then-settle pulse, so a state change is obvious even if it's quick. */
-    private void flash() {
-        if (pulseTimer != null && pulseTimer.isRunning()) {
-            pulseTimer.stop();
-        }
-        pulse = 1.4;
-        pulseTimer = new Timer(25, e -> {
-            pulse = pulse - 0.05;
-            if (pulse <= 1.0) {
-                pulse = 1.0;
-                ((Timer) e.getSource()).stop();
-            }
-            repaint();
-        });
-        pulseTimer.start();
-        repaint();
-    }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        int d = (int) (DIAMETER * pulse);
-        int cx = (WIDTH - d) / 2;
-        int cy = (DIAMETER - d) / 2;
+        int cx = (WIDTH - DIAMETER) / 2;
 
         g2.setColor(fillColor);
-        g2.fillOval(cx, cy, d, d);
+        g2.fillOval(cx, 0, DIAMETER, DIAMETER);
         g2.setColor(borderColor);
         g2.setStroke(new BasicStroke(2.5f));
-        g2.drawOval(cx, cy, d, d);
+        g2.drawOval(cx, 0, DIAMETER, DIAMETER);
 
         int iconX = (WIDTH - icon.getIconWidth()) / 2;
         int iconY = (DIAMETER - icon.getIconHeight()) / 2;
         icon.paintIcon(this, g2, iconX, iconY);
 
-        paintWaitingBadge(g2, cx, cy, d);
+        paintWaitingBadge(g2, cx);
         g2.dispose();
     }
 
     /** Small ascending "z"s in the color of whoever is sleeping/blocked waiting on this station. */
-    private void paintWaitingBadge(Graphics2D g2, int cx, int cy, int d) {
+    private void paintWaitingBadge(Graphics2D g2, int cx) {
         if (waitingAdventurers.isEmpty()) {
             return;
         }
-        int baseX = cx + d - 4;
-        int baseY = cy + 10;
+        int baseX = cx + DIAMETER - 4;
+        int baseY = 14;
         int i = 0;
         for (Color waitingColor : waitingAdventurers.values()) {
             if (i >= 3) {
