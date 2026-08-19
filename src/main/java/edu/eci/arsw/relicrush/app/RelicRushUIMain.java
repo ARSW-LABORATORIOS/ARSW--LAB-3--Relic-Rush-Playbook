@@ -1,6 +1,7 @@
 package edu.eci.arsw.relicrush.app;
 
 import edu.eci.arsw.relicrush.concurrency.LockPair;
+import edu.eci.arsw.relicrush.concurrency.StationActivityListener;
 import edu.eci.arsw.relicrush.game.Adventurer;
 import edu.eci.arsw.relicrush.game.GameConfig;
 import edu.eci.arsw.relicrush.game.GameEngine;
@@ -164,20 +165,34 @@ public final class RelicRushUIMain {
             }
             logPane.setText("");
 
-            LockPair.setListener((who, stationName, type) -> SwingUtilities.invokeLater(() -> {
-                StationMarker marker = stationMarkers.get(stationName);
-                Color color = adventurerColors.getOrDefault(who, Color.DARK_GRAY);
-                if (marker != null) {
-                    switch (type) {
-                        case ACQUIRED -> marker.setOccupied(color, who);
-                        case RELEASED -> marker.setFree();
-                        case WAITING -> {
-                            // The marker keeps its current look; the log line is the evidence of the wait.
-                        }
+            LockPair.setListener((who, stationName, type) -> {
+                // UI-only pacing: slows the demo down enough to watch and to use
+                // Pause/Resume, without touching the timing of the real engine.
+                // Runs on the adventurer's own thread, never on the EDT, and only
+                // exists while this window has a listener registered (never during
+                // RelicRushMain, the probes, or the tests).
+                if (type == StationActivityListener.EventType.ACQUIRED) {
+                    try {
+                        Thread.sleep(250);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
                     }
                 }
-                appendLog(logPane, who + " " + type.toString().toLowerCase() + " " + stationName, color);
-            }));
+                SwingUtilities.invokeLater(() -> {
+                    StationMarker marker = stationMarkers.get(stationName);
+                    Color color = adventurerColors.getOrDefault(who, Color.DARK_GRAY);
+                    if (marker != null) {
+                        switch (type) {
+                            case ACQUIRED -> marker.setOccupied(color, who);
+                            case RELEASED -> marker.setFree();
+                            case WAITING -> {
+                                // The marker keeps its current look; the log line is the evidence of the wait.
+                            }
+                        }
+                    }
+                    appendLog(logPane, who + " " + type.toString().toLowerCase() + " " + stationName, color);
+                });
+            });
 
             engine.setRoundListener((round, scoreSum, ledgerTotal, eventCount, invariantOk, roundAdventurers) ->
                     SwingUtilities.invokeLater(() -> {
