@@ -2,6 +2,7 @@ package edu.eci.arsw.relicrush.game;
 
 import edu.eci.arsw.relicrush.concurrency.ForgeLedger;
 import edu.eci.arsw.relicrush.concurrency.LockPair;
+import edu.eci.arsw.relicrush.concurrency.SimulationControl;
 import edu.eci.arsw.relicrush.model.ForgeEvent;
 import edu.eci.arsw.relicrush.model.ForgeStation;
 
@@ -21,6 +22,7 @@ public final class Adventurer extends Thread {
     private final CyclicBarrier roundEnd;
     private final int rounds;
     private final SplittableRandom random;
+    private final SimulationControl control;
 
     private int score;
 
@@ -30,7 +32,8 @@ public final class Adventurer extends Thread {
             ForgeLedger ledger,
             CyclicBarrier roundStart,
             CyclicBarrier roundEnd,
-            int rounds) {
+            int rounds,
+            SimulationControl control) {
         super("adventurer-" + playerId);
         this.playerId = playerId;
         this.stations = stations;
@@ -38,6 +41,7 @@ public final class Adventurer extends Thread {
         this.roundStart = roundStart;
         this.roundEnd = roundEnd;
         this.rounds = rounds;
+        this.control = control;
         this.random = new SplittableRandom(1000L + playerId);
     }
 
@@ -54,6 +58,7 @@ public final class Adventurer extends Thread {
         try {
             for (int round = 1; round <= rounds; round++) {
                 roundStart.await();
+                control.awaitIfPaused();
                 playTurn(round);
                 roundEnd.await();
             }
