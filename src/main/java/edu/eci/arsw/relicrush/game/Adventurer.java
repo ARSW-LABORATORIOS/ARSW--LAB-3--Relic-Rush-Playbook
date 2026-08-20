@@ -58,7 +58,6 @@ public final class Adventurer extends Thread {
         try {
             for (int round = 1; round <= rounds; round++) {
                 roundStart.await();
-                control.awaitIfPaused();
                 playTurn(round);
                 roundEnd.await();
             }
@@ -69,7 +68,7 @@ public final class Adventurer extends Thread {
         }
     }
 
-    private void playTurn(int round) {
+    private void playTurn(int round) throws InterruptedException {
         int firstIndex = random.nextInt(stations.size());
         int secondIndex;
         do {
@@ -79,6 +78,7 @@ public final class Adventurer extends Thread {
         ForgeStation first = stations.get(firstIndex);
         ForgeStation second = stations.get(secondIndex);
 
+        control.awaitIfPaused();
         LockPair.withBoth(first, second, () -> {
             // score is only written by this player's thread.
             score++;

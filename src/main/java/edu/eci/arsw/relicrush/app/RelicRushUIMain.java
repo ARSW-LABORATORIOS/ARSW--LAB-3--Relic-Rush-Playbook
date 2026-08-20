@@ -61,8 +61,8 @@ public final class RelicRushUIMain {
         headerPanel.add(invariantLabel);
         headerPanel.add(totalLabel);
 
-        JSpinner adventurersSpinner = new JSpinner(new SpinnerNumberModel(8, 2, 64, 1));
-        JSpinner stationsSpinner = new JSpinner(new SpinnerNumberModel(6, 2, 8, 1));
+        JSpinner adventurersSpinner = new JSpinner(new SpinnerNumberModel(8, 2, 128, 1));
+        JSpinner stationsSpinner = new JSpinner(new SpinnerNumberModel(6, 2, 16, 1));
         JSpinner roundsSpinner = new JSpinner(new SpinnerNumberModel(25, 1, 500, 1));
 
         JPanel configPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
