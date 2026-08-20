@@ -17,10 +17,6 @@ final class MapBoardPanel extends JPanel {
     private static final int MARKER_W = 96;
     private static final int MARKER_H = 76;
 
-    private static final double[][] POSITIONS = {
-            {16.7, 80}, {33.3, 65}, {50, 75}, {63.3, 50}, {76.7, 60}, {86.7, 35}, {95, 20}, {45, 15}
-    };
-
     private List<StationMarker> orderedMarkers = List.of();
 
     MapBoardPanel() {
@@ -43,10 +39,16 @@ final class MapBoardPanel extends JPanel {
     public void doLayout() {
         int w = getWidth();
         int h = getHeight();
-        for (int i = 0; i < orderedMarkers.size(); i++) {
-            double[] pos = POSITIONS[i % POSITIONS.length];
-            int px = (int) (pos[0] / 100.0 * w);
-            int py = (int) (pos[1] / 100.0 * h);
+        int n = orderedMarkers.size();
+        if (n == 0) return;
+        double cx = w / 2.0;
+        double cy = h / 2.0;
+        double rx = cx * 0.72;
+        double ry = cy * 0.72;
+        for (int i = 0; i < n; i++) {
+            double angle = 2 * Math.PI * i / n - Math.PI / 2;
+            int px = (int) (cx + rx * Math.cos(angle));
+            int py = (int) (cy + ry * Math.sin(angle));
             orderedMarkers.get(i).setBounds(px - MARKER_W / 2, py - MARKER_H / 2, MARKER_W, MARKER_H);
         }
     }
