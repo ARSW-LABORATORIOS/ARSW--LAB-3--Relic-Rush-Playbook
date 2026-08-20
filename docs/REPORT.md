@@ -154,6 +154,9 @@ Ledger events    : 12800
 
 Maven tests:
 
+command:
+![Maven tests](images/imag5.png)
+result:
 ![Maven tests](images/imag1.png)
 
 Deadlock verification after the fix:
@@ -162,9 +165,19 @@ Deadlock verification after the fix:
 
 Invariant verification with 8 players:
 
+command:
+![Maven tests](images/imag6.png)
+
+result:
+
 ![InvariantProbe 8 players](images/imag3.png)
 
 Stress verification with 128 players:
+
+command:
+![Maven tests](images/imag7.png)
+
+result:
 
 ![InvariantProbe 128 players](images/imag4.png)
 
