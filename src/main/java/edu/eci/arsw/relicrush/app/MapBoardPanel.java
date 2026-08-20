@@ -12,8 +12,8 @@ import java.util.List;
  * background/text still update live from LockPair's events).
  */
 final class MapBoardPanel extends JPanel {
-    private static final int LOGICAL_W = 600;
-    private static final int LOGICAL_H = 400;
+    private static final int LOGICAL_W = 900;
+    private static final int LOGICAL_H = 600;
     private static final int MARKER_W = 96;
     private static final int MARKER_H = 76;
 
@@ -43,8 +43,8 @@ final class MapBoardPanel extends JPanel {
         if (n == 0) return;
         double cx = w / 2.0;
         double cy = h / 2.0;
-        double rx = cx * 0.72;
-        double ry = cy * 0.72;
+        double rx = cx * 0.58;
+        double ry = cy * 0.58;
         for (int i = 0; i < n; i++) {
             double angle = 2 * Math.PI * i / n - Math.PI / 2;
             int px = (int) (cx + rx * Math.cos(angle));
@@ -80,8 +80,10 @@ final class MapBoardPanel extends JPanel {
         g2.fillRect(0, 0, LOGICAL_W, LOGICAL_H);
         g2.setColor(new Color(0x5F8EA3));
         g2.setStroke(new BasicStroke(2f));
-        g2.draw(quad(40, 50, 220, 30, 380, 60));
-        g2.draw(quad(60, 340, 260, 370, 560, 320));
+        g2.draw(quad(40, 80, 300, 50, 560, 90));
+        g2.draw(quad(100, 30, 400, 15, 700, 45));
+        g2.draw(quad(60, 510, 350, 545, 700, 500));
+        g2.draw(quad(200, 570, 500, 590, 820, 555));
     }
 
     private Path2D quad(int x1, int y1, int x2, int y2, int x3, int y3) {
@@ -93,13 +95,13 @@ final class MapBoardPanel extends JPanel {
 
     private void paintIsland(Graphics2D g2) {
         Path2D island = new Path2D.Double();
-        island.moveTo(40, 340);
-        island.curveTo(20, 260, 60, 160, 140, 110);
-        island.curveTo(220, 60, 340, 50, 420, 90);
-        island.curveTo(500, 120, 560, 180, 560, 260);
-        island.curveTo(560, 340, 480, 380, 380, 370);
-        island.curveTo(280, 360, 200, 390, 120, 380);
-        island.curveTo(70, 375, 50, 370, 40, 340);
+        island.moveTo(60, 510);
+        island.curveTo(30, 400, 50, 250, 120, 160);
+        island.curveTo(200, 80, 380, 55, 540, 80);
+        island.curveTo(700, 105, 820, 200, 840, 340);
+        island.curveTo(855, 450, 780, 530, 660, 545);
+        island.curveTo(520, 560, 340, 575, 200, 560);
+        island.curveTo(110, 550, 70, 535, 60, 510);
         island.closePath();
         g2.setColor(new Color(0xB9C98E));
         g2.fill(island);
@@ -109,44 +111,77 @@ final class MapBoardPanel extends JPanel {
     }
 
     private void paintMountains(Graphics2D g2) {
-        fillPoly(g2, 0xA49C8A, 250, 155, 285, 95, 320, 155);
-        fillPoly(g2, 0x9C9483, 300, 150, 350, 70, 400, 150);
-        fillPoly(g2, 0x8D8471, 360, 140, 420, 65, 480, 140);
-        fillPoly(g2, 0xF4F1E8, 375, 105, 420, 65, 445, 105);
-        fillPoly(g2, 0x7C7461, 410, 150, 450, 95, 490, 150);
-        fillPoly(g2, 0xF4F1E8, 425, 120, 450, 95, 465, 120);
+        // cadena de montañas en el fondo derecho, lejos del centro
+        fillPoly(g2, 0xA49C8A, 580, 240, 630, 155, 680, 240);
+        fillPoly(g2, 0x9C9483, 640, 230, 710, 130, 780, 230);
+        fillPoly(g2, 0x8D8471, 720, 220, 800, 110, 870, 220);
+        // nieve en los picos
+        fillPoly(g2, 0xF4F1E8, 695, 165, 710, 130, 728, 165);
+        fillPoly(g2, 0xF4F1E8, 778, 148, 800, 110, 820, 148);
+        // montaña extra izquierda para dar profundidad
+        fillPoly(g2, 0xB0A896, 530, 250, 575, 175, 620, 250);
     }
 
     private void paintCastle(Graphics2D g2) {
+        // base del castillo
         g2.setColor(new Color(0x9A8F7A));
-        g2.fillRect(88, 150, 64, 42);
+        g2.fillRect(100, 180, 110, 80);
+        // almenas superiores de la muralla
         g2.setColor(new Color(0x847A67));
-        g2.fillRect(88, 150, 64, 8);
-        g2.setColor(new Color(0x5C5145));
-        g2.fillRect(104, 164, 8, 8);
-        g2.fillRect(128, 164, 8, 8);
+        for (int bx = 100; bx < 210; bx += 18) {
+            g2.fillRect(bx, 165, 12, 18);
+        }
+        // ventanas
+        g2.setColor(new Color(0x3A3028));
+        g2.fillRect(120, 200, 14, 18);
+        g2.fillRect(152, 200, 14, 18);
+        g2.fillRect(184, 200, 14, 18);
+        // puerta
+        g2.setColor(new Color(0x3A3028));
+        g2.fillRect(148, 228, 18, 32);
+        g2.fillArc(148, 220, 18, 16, 0, 180);
+        // torre izquierda
         g2.setColor(new Color(0x8A7F6A));
-        g2.fillRect(83, 128, 14, 30);
-        g2.fillRect(133, 128, 14, 30);
-        fillPoly(g2, 0x7A4F3A, 83, 128, 90, 111, 97, 128);
-        fillPoly(g2, 0x7A4F3A, 133, 128, 140, 111, 147, 128);
+        g2.fillRect(88, 148, 28, 60);
+        // almenas torre izquierda
+        g2.setColor(new Color(0x756B58));
+        for (int bx = 88; bx < 116; bx += 10) {
+            g2.fillRect(bx, 136, 7, 14);
+        }
+        // torre derecha
+        g2.setColor(new Color(0x8A7F6A));
+        g2.fillRect(194, 148, 28, 60);
+        // almenas torre derecha
+        g2.setColor(new Color(0x756B58));
+        for (int bx = 194; bx < 222; bx += 10) {
+            g2.fillRect(bx, 136, 7, 14);
+        }
+        // techo cónico torre izquierda
+        fillPoly(g2, 0x7A3A2A, 88, 148, 102, 112, 116, 148);
+        // techo cónico torre derecha
+        fillPoly(g2, 0x7A3A2A, 194, 148, 208, 112, 222, 148);
+        // bandera torre izquierda
         g2.setColor(new Color(0x5C421F));
-        g2.fillRect(112, 160, 16, 32);
         g2.setStroke(new BasicStroke(1.5f));
-        g2.drawLine(90, 111, 90, 98);
-        fillPoly(g2, 0xA83B3B, 90, 98, 90, 106, 100, 102);
-        g2.drawLine(140, 111, 140, 98);
-        fillPoly(g2, 0xA83B3B, 140, 98, 140, 106, 150, 102);
+        g2.drawLine(102, 112, 102, 92);
+        fillPoly(g2, 0xC03030, 102, 92, 102, 106, 118, 99);
+        // bandera torre derecha
+        g2.drawLine(208, 112, 208, 92);
+        fillPoly(g2, 0xC03030, 208, 92, 208, 106, 224, 99);
     }
 
     private void paintTrees(Graphics2D g2) {
-        treeRound(g2, 240, 200, 10);
-        treeRound(g2, 228, 210, 7);
-        treePine(g2, 160, 220);
-        treeRound(g2, 440, 290, 10);
-        treePine(g2, 455, 280);
-        treeRound(g2, 505, 205, 8);
-        treeRound(g2, 90, 330, 8);
+        treeRound(g2, 340, 460, 14);
+        treeRound(g2, 320, 475, 10);
+        treePine(g2, 370, 440);
+        treePine(g2, 390, 455);
+        treeRound(g2, 680, 430, 13);
+        treePine(g2, 700, 415);
+        treeRound(g2, 740, 445, 10);
+        treeRound(g2, 130, 460, 11);
+        treePine(g2, 150, 445);
+        treeRound(g2, 760, 200, 11);
+        treePine(g2, 780, 185);
     }
 
     private void treeRound(Graphics2D g2, int cx, int cy, int r) {
@@ -164,33 +199,36 @@ final class MapBoardPanel extends JPanel {
 
     private void paintPath(Graphics2D g2) {
         Path2D path = new Path2D.Double();
-        path.moveTo(100, 320);
-        path.quadTo(160, 290, 200, 260);
-        path.quadTo(260, 280, 300, 300);
-        path.quadTo(340, 250, 380, 200);
-        path.quadTo(420, 220, 460, 240);
-        path.quadTo(490, 190, 520, 140);
-        g2.setColor(new Color(0x5C421F));
-        g2.setStroke(new BasicStroke(4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[]{2f, 10f}, 0f));
+        path.moveTo(155, 300);
+        path.quadTo(200, 430, 300, 490);
+        path.quadTo(430, 540, 560, 500);
+        path.quadTo(700, 460, 780, 370);
+        path.quadTo(820, 280, 760, 190);
+        path.quadTo(700, 130, 600, 120);
+        path.quadTo(480, 110, 380, 140);
+        path.quadTo(270, 170, 200, 240);
+        path.quadTo(155, 270, 155, 300);
+        g2.setColor(new Color(0x8B6914));
+        g2.setStroke(new BasicStroke(6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[]{4f, 14f}, 0f));
         g2.draw(path);
     }
 
     private void paintCompass(Graphics2D g2) {
-        int cx = 555;
-        int cy = 360;
-        int[] xs = {cx, cx + 5, cx + 24, cx + 5, cx, cx - 5, cx - 24, cx - 5};
-        int[] ys = {cy - 24, cy - 5, cy, cy + 5, cy + 24, cy + 5, cy, cy - 5};
+        int cx = 855;
+        int cy = 555;
+        int[] xs = {cx, cx + 7, cx + 32, cx + 7, cx, cx - 7, cx - 32, cx - 7};
+        int[] ys = {cy - 32, cy - 7, cy, cy + 7, cy + 32, cy + 7, cy, cy - 7};
         g2.setColor(new Color(0xF3E6C4));
         g2.fillPolygon(xs, ys, 8);
         g2.setColor(new Color(0x7A5C30));
         g2.setStroke(new BasicStroke(1.5f));
         g2.drawPolygon(xs, ys, 8);
-        g2.drawOval(cx - 24, cy - 24, 48, 48);
-        g2.setFont(new Font(Font.SERIF, Font.BOLD, 9));
-        g2.drawString("N", cx - 3, cy - 27);
-        g2.drawString("S", cx - 3, cy + 34);
-        g2.drawString("E", cx + 27, cy + 4);
-        g2.drawString("W", cx - 33, cy + 4);
+        g2.drawOval(cx - 32, cy - 32, 64, 64);
+        g2.setFont(new Font(Font.SERIF, Font.BOLD, 11));
+        g2.drawString("N", cx - 4, cy - 36);
+        g2.drawString("S", cx - 4, cy + 46);
+        g2.drawString("E", cx + 36, cy + 4);
+        g2.drawString("W", cx - 46, cy + 4);
     }
 
     private void paintTitleBanner(Graphics2D g2, int panelWidth) {
