@@ -267,3 +267,29 @@ Stress tests with 8, 32 and 128 players all finished with `invariant=OK`.
 3. The final stress tests showed that the solution preserves the game invariant even
    with a high number of players, while still allowing concurrent execution between
    independent forge operations.
+
+## 9. Graphical interface
+
+To run the graphical interface, build the project first if you haven't:
+
+```bash
+mvn -q -DskipTests package
+```
+
+Then run:
+
+```bash
+java -cp target/classes edu.eci.arsw.relicrush.app.RelicRushUIMain
+```
+
+#### Initial screen when the interface opens
+
+![Initial screen](images/imag8.png)
+
+#### 8 adventurers, 6 stations, 25 rounds
+
+![8 adventurers 6 stations 25 rounds](images/imag9.png)
+
+#### 4 adventurers, 10 stations, 5 rounds
+
+![4 adventurers 10 stations 5 rounds](images/imag10.png)
