@@ -4,8 +4,8 @@
 
 | Student                     | ID         | GitHub   |
 |-----------------------------|------------|----------|
-| Mabel Fernanda Bernal Amaya |            |          |
-| Nicolas David Prieto Ramos  |            |          |
+| Mabel Fernanda Bernal Amaya | 1000100629 | MabelBernalAmaya |
+| Nicolas David Prieto Ramos  | 1000091873 | NicolasPrieto12  |
 | Juan Eduardo Vera Acero     | 1000091871 | JUNE2908 |
 
 Repository: `https://github.com/ARSW-LABORATORIOS/ARSW--LAB-3--Relic-Rush-Playbook.git`
@@ -68,8 +68,8 @@ are visible by the coordinator
 
 | Shared state  | Problem                                                                                            | Invariant at risk                                                  | Solution                                 | Why this solution?                                                       |
 |---------------|----------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|------------------------------------------|--------------------------------------------------------------------------|
-| `totalCrafted` | The update is a non-atomic read-modify-write operation, so concurrent threads can lose increments. | `sum of player scores == totalCrafted == number of events`         | `synchronized` in the critical operation | It prevents multiple threads from updating the counter at the same time. |
-| `events`      | `ArrayList` is not thread-safe for concurrent writes.                                              | Every crafted relic must be registered exactly once in the ledger. | `synchronized` access to the list        | It prevents concurrent modifications from losing or corrupting events.   |
+| `totalCrafted` | The update is a non-atomic read-modify-write operation, so concurrent threads can lose increments. | `sum of player scores == totalCrafted == number of events`         | `AtomicInteger.incrementAndGet()` | It makes the read-modify-write a single atomic operation without needing a lock, so no increment is ever lost. |
+| `events`      | `ArrayList` is not thread-safe for concurrent writes.                                              | Every crafted relic must be registered exactly once in the ledger. | `CopyOnWriteArrayList`        | It guarantees safe concurrent appends. Writes are infrequent (one per craft) and reads in `snapshot()` are completely lock-free, which fits the access pattern of this ledger.   |
 
 ## 4. Deadlock diagnosis
 
@@ -263,8 +263,8 @@ The stress tests with 8, 32 and 128 players also finished with
 
 ## 8. Conclusions
 
-1. with this lab we undertood that concurrency problems are not only
-related to performency but also to correctness and coordination between
+1. with this lab we understood that concurrency problems are not only
+related to performance but also to correctness and coordination between
 the threads
 
 2. we learned that shared state must be protected correctly to avoid race 
@@ -274,3 +274,29 @@ order when acquiring multiple locks
 3. The final stress tests showed that the solution preserves the game 
 invariant even with a high number of players, while still allowing concurrent 
 execution between independent forge operations.
+
+## 9. Graphical interface
+
+To run the graphical interface, build the project first if you haven't:
+
+```bash
+mvn -q -DskipTests package
+```
+
+Then run:
+
+```bash
+java -cp target/classes edu.eci.arsw.relicrush.app.RelicRushUIMain
+```
+
+#### Initial screen when the interface opens
+
+![Initial screen](images/imag8.png)
+
+#### 8 adventurers, 6 stations, 25 rounds
+
+![8 adventurers 6 stations 25 rounds](images/imag9.png)
+
+#### 4 adventurers, 10 stations, 5 rounds
+
+![4 adventurers 10 stations 5 rounds](images/imag10.png)

@@ -34,7 +34,7 @@ deadlock.
 ## Quality attributes affected
 
 - Correctness / reliability: the deterministic ordering prevents circular
-wait and reduces the possibility of deadlocks.
+wait and eliminates deadlocks caused by inconsistent lock acquisition order.
 - Performance / throughput: independent craft operations can still execute
 concurrently because there is no global lock.
 - Maintainability: the locking rule is explicit and can be followed in future

@@ -161,7 +161,7 @@ All workers wait until the coordinator releases the round.
 
 The coordinator waits until every worker finishes its turn before reading the scoreboard.
 
-Answer in `docs/REPORT_TEMPLATE.md`:
+Answer in [`docs/REPORT_TEMPLATE.md`](https://github.com/ARSW-LABORATORIOS/ARSW--LAB-3--Relic-Rush-Playbook/blob/develop/docs/REPORT_TEMPLATE.md):
 
 1. What problem does `roundStart` solve?
 2. What problem does `roundEnd` solve?
@@ -399,9 +399,7 @@ To scale further, the natural lever is increasing the number of stations. More s
 
 Create:
 
-```text
-docs/ADR-001-deadlock-prevention.md
-```
+[`docs/ADR-001-deadlock-prevention.md`](https://github.com/ARSW-LABORATORIOS/ARSW--LAB-3--Relic-Rush-Playbook/blob/develop/docs/ADR-001-deadlock-prevention.md)
 
 Use this structure:
 
@@ -446,7 +444,7 @@ docs/REPORT.md
 docs/ADR-001-deadlock-prevention.md
 ```
 
-Use `docs/REPORT_TEMPLATE.md` as the starting point for `REPORT.md`.
+Use [`docs/REPORT_TEMPLATE.md`](https://github.com/ARSW-LABORATORIOS/ARSW--LAB-3--Relic-Rush-Playbook/blob/develop/docs/REPORT_TEMPLATE.md) as the starting point for [`docs/REPORT.md`](https://github.com/ARSW-LABORATORIOS/ARSW--LAB-3--Relic-Rush-Playbook/blob/develop/docs/REPORT.md).
 
 ---
 
