@@ -288,8 +288,12 @@ java -cp target/classes edu.eci.arsw.relicrush.app.RelicRushUIMain
 
 #### 8 adventurers, 6 stations, 25 rounds
 
+Example:
+
 ![8 adventurers 6 stations 25 rounds](images/imag9.png)
 
 #### 4 adventurers, 10 stations, 5 rounds
+
+Example:
 
 ![4 adventurers 10 stations 5 rounds](images/imag10.png)
