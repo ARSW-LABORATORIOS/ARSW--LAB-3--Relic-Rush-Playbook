@@ -316,29 +316,82 @@ The game must finish normally.
 
 # 14. Architectural analysis
 
-The final report must connect the implementation with quality attributes.
-
-Discuss at least:
-
 ### Correctness / reliability
 
-- Which invariants are protected?
-- What evidence demonstrates that they hold?
+**Protected invariants:**
+
+Two invariants must hold at the end of every round:
+
+```text
+sum of player scores == ForgeLedger.totalCrafted == number of ForgeEvent entries
+```
+
+And:
+
+```text
+No forge station is held by two craft operations at the same time.
+```
+
+The first invariant is protected by `AtomicInteger.incrementAndGet()` in `ForgeLedger`, which makes the read-modify-write on `totalCrafted` a single atomic operation, and by `CopyOnWriteArrayList` for the `events` list, which guarantees safe concurrent appends without data loss.
+
+The second invariant is protected by `LockPair.withBoth()`, which uses `synchronized` on each `ForgeStation` object as its own monitor. Only one thread can hold a station's monitor at a time — the JVM enforces this.
+
+**Evidence:**
+
+`DeadlockProbe` reports `NO DEADLOCK DETECTED` on every run after the fix. `InvariantProbe` run with three configurations confirms `invariant=OK` on every round:
+
+```bash
+java -cp target/classes edu.eci.arsw.relicrush.app.InvariantProbe 8 6 50
+java -cp target/classes edu.eci.arsw.relicrush.app.InvariantProbe 32 8 100
+java -cp target/classes edu.eci.arsw.relicrush.app.InvariantProbe 128 8 100
+```
+
+---
 
 ### Performance / throughput
 
-- Where can lock contention appear?
-- Why is a global lock undesirable?
-- Which craft operations can still execute concurrently?
+**Where lock contention can appear:**
+
+Contention appears when two or more adventurers try to acquire the same `ForgeStation` monitor at the same time. The probability of contention grows as the number of players increases relative to the number of stations — with 128 players and 6 stations, most threads will queue on the same few monitors.
+
+There is also a brief contention point on `CopyOnWriteArrayList.add()` in `ForgeLedger.record()`, since each write creates a new internal array copy. This is acceptable because writes are infrequent (one per craft) and reads in `snapshot()` are completely lock-free.
+
+**Why a global lock is undesirable:**
+
+A single global lock on the entire craft operation would serialize every adventurer behind one monitor, regardless of which stations they need. Two adventurers using completely different stations — for example, one using `Arcane Anvil + Crystal Lens` and another using `Dragon Furnace + Moon Altar` — have no shared resource and could run in parallel. A global lock eliminates that parallelism entirely, reducing throughput to one craft at a time across the whole game.
+
+**Which craft operations can still execute concurrently:**
+
+Any two craft operations that use disjoint station pairs can execute in parallel. For example, adventurer A holding `station-1` and `station-3` does not block adventurer B from acquiring `station-2` and `station-4` at the same time. The fine-grained locking in `LockPair.withBoth()` preserves this concurrency — only operations that share at least one station are serialized against each other.
+
+---
 
 ### Maintainability
 
-- Is lock ownership obvious?
-- Is the lock ordering rule explicit and easy to preserve?
+**Lock ownership:**
+
+Lock ownership is explicit and local. Each `ForgeStation` instance is its own monitor — the object that is locked is the same object that represents the resource being protected. There is no separate lock object to track or associate with a resource. Any developer reading `synchronized (lo)` immediately knows which station is being held.
+
+**Lock ordering rule:**
+
+The ordering rule is centralized in a single method: `LockPair.withBoth()`. The rule is stated in two lines:
+
+```java
+ForgeStation lo = first.id() < second.id() ? first : second;
+ForgeStation hi = first.id() < second.id() ? second : first;
+```
+
+No caller needs to know about the ordering — it is enforced unconditionally inside `withBoth()`. Adding a new station type or a new adventurer strategy does not require remembering to apply the rule: any code that goes through `LockPair.withBoth()` is automatically safe. The only risk would be bypassing `withBoth()` and acquiring station monitors directly with `synchronized` elsewhere, which is easy to detect in a code review.
+
+---
 
 ### Scalability
 
-- What happens when the number of players grows while the number of stations stays constant?
+As the number of players grows while the number of stations stays constant, contention on station monitors increases. With `S` stations and `P` players per round, on average `P/S` players compete for each station. When `P >> S`, most threads spend most of their time blocked waiting for a monitor rather than doing useful work — throughput per player drops and the round takes longer to complete.
+
+The ordering fix does not make this worse: it only changes the order in which threads queue on monitors, not the queue length. The bottleneck is the station count, not the locking strategy.
+
+To scale further, the natural lever is increasing the number of stations. More stations means more disjoint pairs available, more operations that can run in parallel, and less average wait time per thread. The current design supports this directly — `GameConfig.stations()` controls station count and `LockPair.withBoth()` requires no changes regardless of how many stations exist.
 
 ---
 
@@ -426,3 +479,34 @@ coordination
 The objective is not merely to know `synchronized`.
 
 > **The objective is to design a concurrent solution whose correctness and liveness can be explained and demonstrated.**
+
+---
+
+# 20. Bonus - Graphical interface
+
+This is **not part of the graded lab** (it doesn't appear in section 18's rubric) - it's an extra desktop UI built on top of the same `GameEngine`, `ForgeLedger` and `LockPair` used everywhere else. If it's ever unstable, the console version (`RelicRushMain` and the probes) is what actually counts for the grade.
+
+Build first if you haven't:
+
+```bash
+mvn -q -DskipTests package
+```
+
+Run it:
+
+```bash
+java -cp target/classes edu.eci.arsw.relicrush.app.RelicRushUIMain
+```
+
+A window opens with:
+
+- **Adventurers**: the roster on the right, with each player's color and live relic count. Click one to see its current status in the detail line.
+- **Forge stations and their state**: the map in the center - each station is a circle that changes color when an adventurer holds it, and shows a small "z" badge (in that adventurer's color) when someone else is blocked waiting on it.
+- **Scores and relics crafted**: "total forjado" in the header, plus each adventurer's own count in the roster.
+- **Simulation state and invariants**: the round counter, `corriendo`/`pausado`/`detenido` state, and `invariante: OK/ROTO (scoreSum = ledger = events)` in the header - same values `RelicRushMain` prints, just live.
+- **Start / Pause / Resume / Stop**: Pause/Resume reuse the same `wait()`/`notifyAll()` pattern as the Warehouse Lab's `SimulationControl` - paused adventurers block without spinning, and Resume wakes them with `notifyAll()`. Stop interrupts every adventurer thread.
+
+Notes:
+
+- With the default config (8 players, 25 rounds) the game finishes in under a second, since there's no artificial delay anywhere in the real logic - you won't get to click Pause in time. Either raise "Rondas" a lot, or just watch: the UI adds a small 250ms pacing delay per station acquisition, but only inside its own listener code (`RelicRushUIMain`), never inside `Adventurer`, `GameEngine` or `LockPair`. Running the console/probes/tests is completely unaffected by this - it's UI-only pacing, not a coordination mechanism.
+- `LockPair` exposes an optional `StationActivityListener` hook (`setListener`, `WAITING`/`ACQUIRED`/`RELEASED`) that the UI uses to know who holds or is waiting on each station. If no listener is registered - which is the case for `RelicRushMain`, every probe, and the tests - it's a no-op.

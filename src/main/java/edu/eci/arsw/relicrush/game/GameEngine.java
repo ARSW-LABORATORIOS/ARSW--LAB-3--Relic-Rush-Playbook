@@ -1,6 +1,7 @@
 package edu.eci.arsw.relicrush.game;
 
 import edu.eci.arsw.relicrush.concurrency.ForgeLedger;
+import edu.eci.arsw.relicrush.concurrency.SimulationControl;
 import edu.eci.arsw.relicrush.model.ForgeStation;
 
 import java.util.ArrayList;
@@ -20,6 +21,18 @@ public final class GameEngine {
     private final CyclicBarrier roundStart;
     private final CyclicBarrier roundEnd;
     private final AtomicBoolean finished = new AtomicBoolean(false);
+    private final SimulationControl control = new SimulationControl();
+    private RoundListener roundListener;
+
+    /**
+     * UI bonus hook: fired after every round, once the round barrier has
+     * been crossed by everyone (so all writes from this round are visible).
+     */
+    public interface RoundListener {
+        void onRoundComplete(
+                int round, int scoreSum, int ledgerTotal, int eventCount,
+                boolean invariantOk, List<Adventurer> adventurers);
+    }
 
     public GameEngine(GameConfig config) {
         this.config = config;
@@ -34,8 +47,33 @@ public final class GameEngine {
                     ledger,
                     roundStart,
                     roundEnd,
-                    config.rounds()));
+                    config.rounds(),
+                    control));
         }
+    }
+
+    public void setRoundListener(RoundListener listener) {
+        this.roundListener = listener;
+    }
+
+    public void pause() {
+        control.pause();
+    }
+
+    public void resume() {
+        control.resume();
+    }
+
+    /** UI bonus: interrupts every adventurer so the game stops early. */
+    public void stopAll() {
+        for (Adventurer adventurer : adventurers) {
+            adventurer.interrupt();
+        }
+    }
+
+    /** UI bonus: exposes the stations so the UI can label them by name. */
+    public List<ForgeStation> stations() {
+        return stations;
     }
 
     public void run() throws InterruptedException, BrokenBarrierException {
@@ -87,6 +125,7 @@ public final class GameEngine {
         int scoreSum = adventurers.stream().mapToInt(Adventurer::score).sum();
         int ledgerTotal = ledger.totalCrafted();
         int eventCount = ledger.eventCount();
+        boolean invariantOk = scoreSum == ledgerTotal && ledgerTotal == eventCount;
 
         System.out.printf(
                 "ROUND %02d | scoreSum=%d | ledger=%d | events=%d | invariant=%s%n",
@@ -94,7 +133,11 @@ public final class GameEngine {
                 scoreSum,
                 ledgerTotal,
                 eventCount,
-                (scoreSum == ledgerTotal && ledgerTotal == eventCount) ? "OK" : "BROKEN");
+                invariantOk ? "OK" : "BROKEN");
+
+        if (roundListener != null) {
+            roundListener.onRoundComplete(round, scoreSum, ledgerTotal, eventCount, invariantOk, adventurers);
+        }
     }
 
     private void printFinalSummary() {
